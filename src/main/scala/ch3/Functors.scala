@@ -32,5 +32,23 @@ object Test extends App {
 
   private val value: Tree[Int] = Tree.branch(Tree.leaf(4), Tree.leaf(4)).map(_ * 2)
   println(value)
+  implicit val stringCodec: Codec[String] =
+    new Codec[String] {
+      def encode(value: String): String = value
+      def decode(value: String): String = value
+    }
+  implicit val doubleCodec: Codec[Double] = stringCodec.imap(_.toDouble, _.toString)
+
+  case class Box[A](value: A)
+  implicit def boxCodec[A](implicit wrappedCodec: Codec[A]): Codec[Box[A]] =
+    wrappedCodec.imap(Box(_), _.value)
+
+
+  def encode[A](value: A)(implicit c: Codec[A]): String =
+    c.encode(value)
+  def decode[A](value: String)(implicit c: Codec[A]): A =
+    c.decode(value)
+
+
 
 }
